@@ -1,0 +1,10 @@
+{
+  "agent": {
+    "plan": {
+      "permission": {
+        "task": { "render": "allow" }
+      }
+    }
+  },
+  "instructions": [".opencode/instructions/plan-render.md"]
+}
