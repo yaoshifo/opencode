@@ -80,8 +80,8 @@ export const apply = Effect.fn("SessionReminders.apply")(function* (input: {
     type: "text",
     text: PLAN_MODE.replace("${planInfo}", () =>
       exists
-        ? `A plan file already exists at ${plan}. You can read it and make incremental edits using the edit tool.`
-        : `No plan file exists yet. You should create your plan at ${plan} using the write tool.`,
+        ? `A plan file already exists at ${plan}. You may iterate on it with the edit tool, but when you are ready to exit plan mode you MUST include the complete plan text in the plan parameter of the plan_exit tool call.`
+        : `No plan file exists yet. Compose your plan and, when ready to exit plan mode, you MUST include the complete plan text in the plan parameter of the plan_exit tool call. You may optionally write it to ${plan} for reference, but the plan_exit plan parameter is authoritative.`,
     ),
     synthetic: true,
   })

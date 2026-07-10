@@ -1,13 +1,14 @@
-Use this tool when you have completed the planning phase and are ready to exit plan agent.
+Use this tool when you have completed the planning phase and are ready to exit plan agent and switch to the build agent.
 
-This tool will ask the user if they want to switch to build agent to start implementing the plan.
+You MUST include the COMPLETE plan text in the plan parameter. The plan will be shown to the user for approval; on approval the session switches to the build agent to start implementing.
 
 Call this tool:
-- After you have written a complete plan to the plan file
+- After you have finalized the plan (include the full plan in the plan parameter)
 - After you have clarified any questions with the user
 - When you are confident the plan is ready for implementation
 
 Do NOT call this tool:
-- Before you have created or finalized the plan
+- Before you have composed the plan
+- With an empty or placeholder plan parameter
 - If you still have unanswered questions about the implementation
 - If the user has indicated they want to continue planning

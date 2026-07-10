@@ -161,7 +161,7 @@ const layer = Layer.effect(
               defaults,
               Permission.fromConfig({
                 question: "allow",
-                plan_exit: "allow",
+                plan_exit: "ask",
                 task: {
                   general: "deny",
                 },

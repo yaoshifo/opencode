@@ -2,7 +2,6 @@ import path from "path"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Effect, Schema } from "effect"
 import * as Tool from "./tool"
-import { Question } from "../question"
 import { Session } from "@/session/session"
 import { MessageV2 } from "../session/message-v2"
 import { Provider } from "@/provider/provider"
@@ -10,40 +9,37 @@ import { InstanceState } from "@/effect/instance-state"
 import { MessageID, PartID } from "../session/schema"
 import EXIT_DESCRIPTION from "./plan-exit.txt"
 
-export const Parameters = Schema.Struct({})
+export const Parameters = Schema.Struct({
+  plan: Schema.String.pipe(Schema.nonEmptyString({ message: () => "plan is required" })),
+})
 
 export const PlanExitTool = Tool.define(
   "plan_exit",
   Effect.gen(function* () {
     const session = yield* Session.Service
-    const question = yield* Question.Service
     const provider = yield* Provider.Service
 
     return {
       description: EXIT_DESCRIPTION,
       parameters: Parameters,
-      execute: (_params: {}, ctx: Tool.Context) =>
+      execute: (params: { plan: string }, ctx: Tool.Context) =>
         Effect.gen(function* () {
           const instance = yield* InstanceState.context
           const info = yield* session.get(ctx.sessionID)
           const plan = path.relative(instance.worktree, Session.plan(info, instance))
-          const answers = yield* question.ask({
-            sessionID: ctx.sessionID,
-            questions: [
-              {
-                question: `Plan at ${plan} is complete. Would you like to switch to the build agent and start implementing?`,
-                header: "Build Agent",
-                custom: false,
-                options: [
-                  { label: "Yes", description: "Switch to build agent and start implementing the plan" },
-                  { label: "No", description: "Stay with plan agent to continue refining the plan" },
-                ],
-              },
-            ],
-            tool: ctx.callID ? { messageID: ctx.messageID, callID: ctx.callID } : undefined,
+          // Surface the plan for user approval via the permission channel. The plan
+          // text travels inline in metadata so the bridge need not read the plan file.
+          // On reject, PermissionV1.RejectedError bubbles up and fails this tool call,
+          // keeping the session in the plan agent — no manual error throw needed.
+          yield* ctx.ask({
+            permission: "plan_exit",
+            patterns: ["*"],
+            always: [],
+            metadata: {
+              plan: params.plan,
+              planFilePath: plan,
+            },
           })
-
-          if (answers[0]?.[0] === "No") yield* new Question.RejectedError()
 
           const messages = yield* session.messages({ sessionID: ctx.sessionID }).pipe(Effect.orDie)
           const lastUser = messages.findLast((item) => item.info.role === "user" && item.info.model)
@@ -64,14 +60,14 @@ export const PlanExitTool = Tool.define(
             messageID: msg.id,
             sessionID: ctx.sessionID,
             type: "text",
-            text: `The plan at ${plan} has been approved, you can now edit files. Execute the plan`,
+            text: `The plan has been approved, you can now edit files. Execute the plan:\n\n${params.plan}`,
             synthetic: true,
           } satisfies SessionV1.TextPart)
 
           return {
             title: "Switching to build agent",
             output: "User approved switching to build agent. Wait for further instructions.",
-            metadata: {},
+            metadata: { plan: params.plan },
           }
         }).pipe(Effect.orDie),
     }
