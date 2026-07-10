@@ -25,6 +25,7 @@ git sync-up
   （若报 `bun: command not found`，bun 装在 `~/.bun/bin/bun`，交互式终端已自动加 PATH。）
 - 快速迭代免全量 build：`cd packages/opencode && bun run dev`（直接从 `src/index.ts` 跑）。
 - rebuild 前先存兜底：`cp packages/opencode/dist/opencode-linux-x64/bin/opencode ~/opencode.good`，build 炸了把 alias 临时指向它。
+- 一键脚本（推荐）：`bash scripts/rebuild-opencode.sh` —— 自动做 备份兜底 → `bun run build`（失败自动回滚）→ 检测运行中的 opencode 进程并给重启指引，等价于上面手敲那串。
 
 ## 降冲突铁律（比 merge/rebase 之争更重要）
 - **能加文件就别改文件**：新功能放新文件/新目录，而不是改上游源码——新文件永不冲突。
