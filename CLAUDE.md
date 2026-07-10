@@ -16,6 +16,16 @@ git sync-up
 - 冲突时 rebase 会中途停：解冲突 → `git add` → `git rebase --continue` → 再单独 `git push --force-with-lease origin custom`。
 - 一律 `--force-with-lease`，不要裸 `--force`。
 
+## 本机实际跑的 opencode（构建产物，rebuild 才更新）
+- `opencode` alias 指向 `packages/opencode/dist/opencode-linux-x64/bin/opencode`（gitignore 的本地构建产物）。它冻结在上次 build，**不会随 `git sync-up` / 切分支自动更新**。
+- `git sync-up` 之后、或自己改完源码后，要让跑中的工具跟上就必须 rebuild：
+  ```
+  cd packages/opencode && bun run build
+  ```
+  （若报 `bun: command not found`，bun 装在 `~/.bun/bin/bun`，交互式终端已自动加 PATH。）
+- 快速迭代免全量 build：`cd packages/opencode && bun run dev`（直接从 `src/index.ts` 跑）。
+- rebuild 前先存兜底：`cp packages/opencode/dist/opencode-linux-x64/bin/opencode ~/opencode.good`，build 炸了把 alias 临时指向它。
+
 ## 降冲突铁律（比 merge/rebase 之争更重要）
 - **能加文件就别改文件**：新功能放新文件/新目录，而不是改上游源码——新文件永不冲突。
 - 优先用扩展点（plugin / config / hook），而非打补丁。
