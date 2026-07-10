@@ -10,7 +10,7 @@ import { MessageID, PartID } from "../session/schema"
 import EXIT_DESCRIPTION from "./plan-exit.txt"
 
 export const Parameters = Schema.Struct({
-  plan: Schema.String.pipe(Schema.nonEmptyString({ message: () => "plan is required" })),
+  plan: Schema.String, // full plan text (required, no default); empty falls back to plan file on the bridge side
 })
 
 export const PlanExitTool = Tool.define(
