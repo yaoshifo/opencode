@@ -190,8 +190,11 @@ describe("tool parameters", () => {
   })
 
   describe("plan", () => {
-    test("accepts empty object", () => {
-      expect(parse(Plan, {})).toEqual({})
+    test("rejects empty object", () => {
+      expect(accepts(Plan, {})).toBe(false)
+    })
+    test("accepts plan text", () => {
+      expect(parse(Plan, { plan: "the plan" })).toEqual({ plan: "the plan" })
     })
   })
 
