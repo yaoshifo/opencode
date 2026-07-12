@@ -240,6 +240,7 @@ export const Info = Schema.Struct({
   metadata: optional(Metadata),
   time: Time,
   permission: optional(PermissionV1.Ruleset),
+  permission_mode: optional(Schema.Literals(["default", "bypass"])),
   revert: optional(Revert),
 }).annotate({ identifier: "Session" })
 export type Info = Types.DeepMutable<Schema.Schema.Type<typeof Info>>
@@ -265,6 +266,7 @@ export const CreateInput = Schema.optional(
     model: Schema.optional(Model),
     metadata: Schema.optional(Metadata),
     permission: Schema.optional(PermissionV1.Ruleset),
+    permission_mode: Schema.optional(Schema.Literals(["default", "bypass"])),
     workspaceID: Schema.optional(WorkspaceV2.ID),
   }),
 )
@@ -509,6 +511,7 @@ const layer: Layer.Layer<
       path?: string
       metadata?: typeof Metadata.Type
       permission?: PermissionV1.Ruleset
+      permission_mode?: "default" | "bypass"
     }) {
       const ctx = yield* InstanceState.context
       const result: Info = {
@@ -525,6 +528,7 @@ const layer: Layer.Layer<
         model: input.model,
         metadata: input.metadata,
         permission: input.permission ? [...input.permission] : undefined,
+        permission_mode: input.permission_mode,
         cost: 0,
         tokens: EmptyTokens,
         time: {
@@ -673,6 +677,7 @@ const layer: Layer.Layer<
       model?: Schema.Schema.Type<typeof Model>
       metadata?: typeof Metadata.Type
       permission?: PermissionV1.Ruleset
+      permission_mode?: "default" | "bypass"
       workspaceID?: WorkspaceV2.ID
     }) {
       const ctx = yield* InstanceState.context
@@ -686,6 +691,7 @@ const layer: Layer.Layer<
         model: input?.model,
         metadata: input?.metadata,
         permission: input?.permission,
+        permission_mode: input?.permission_mode,
         workspaceID: input?.workspaceID ?? workspace,
       })
     })

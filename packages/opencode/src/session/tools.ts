@@ -78,15 +78,22 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
           },
         }
       }),
-    ask: (req) =>
-      permission
+    ask: (req) => {
+      // bypass: server-side short-circuit, no permission.asked event (mirrors
+      // claudecode --permission-mode bypassPermissions). plan_exit excluded so
+      // the plan card still surfaces. Note: bypass ignores deny rules.
+      if (input.session.permission_mode === "bypass" && req.permission !== "plan_exit") {
+        return Effect.void
+      }
+      return permission
         .ask({
           ...req,
           sessionID: input.session.id,
           tool: { messageID: input.processor.message.id, callID: options.toolCallId },
           ruleset: Permission.merge(input.agent.permission, input.session.permission ?? []),
         })
-        .pipe(Effect.orDie),
+        .pipe(Effect.orDie)
+    },
   })
 
   for (const item of yield* registry.tools({
