@@ -134,6 +134,20 @@ describe("run variant shared", () => {
     expect(resolveVariant(undefined, "missing", "low", ["low", "high"])).toBe("low")
   })
 
+  test("falls back to global effort only when nothing else is set", () => {
+    // global effort is the lowest-priority fallback
+    expect(resolveVariant(undefined, undefined, undefined, ["low", "high"], "high")).toBe("high")
+    // dropped if the model doesn't offer that variant
+    expect(resolveVariant(undefined, undefined, undefined, ["low", "high"], "max")).toBeUndefined()
+    // no global effort -> unchanged behavior
+    expect(resolveVariant(undefined, undefined, undefined, ["low", "high"])).toBeUndefined()
+  })
+
+  test("global effort never overrides saved or session variants", () => {
+    expect(resolveVariant(undefined, undefined, "low", ["low", "high"], "high")).toBe("low")
+    expect(resolveVariant(undefined, "high", undefined, ["low", "high"], "low")).toBe("high")
+  })
+
   test("cycles through variants and back to default", () => {
     expect(cycleVariant(undefined, ["low", "high"])).toBe("low")
     expect(cycleVariant("low", ["low", "high"])).toBe("high")

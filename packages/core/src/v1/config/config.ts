@@ -77,6 +77,10 @@ export const Info = Schema.Struct({
   small_model: Schema.optional(Schema.String).annotate({
     description: "Small model to use for tasks like title generation in the format of provider/model",
   }),
+  effort_level: Schema.optional(Schema.String).annotate({
+    description:
+      "Global default reasoning effort (a model variant such as low/medium/high/max/xhigh). Applied to every agent and model when no more specific variant is selected. Silently skipped if the active model doesn't offer that variant.",
+  }),
   default_agent: Schema.optional(Schema.String).annotate({
     description:
       "Default agent to use when none is specified. Must be a primary agent. Falls back to 'build' if not set or if the specified agent is invalid.",

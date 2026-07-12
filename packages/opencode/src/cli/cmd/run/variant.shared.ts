@@ -99,18 +99,25 @@ export function resolveVariant(
   session: string | undefined,
   saved: string | undefined,
   variants: string[],
+  globalEffort?: string,
 ): string | undefined {
   if (input !== undefined) {
     return input
   }
 
-  const fallback = fitVariant(saved, variants)
   const current = fitVariant(session, variants)
   if (current !== undefined) {
     return current
   }
 
-  return fallback
+  const fallback = fitVariant(saved, variants)
+  if (fallback !== undefined) {
+    return fallback
+  }
+
+  // Top-level `effort_level` from config: lowest-priority default, applied to
+  // any model. fitVariant drops it if the model doesn't offer that variant.
+  return fitVariant(globalEffort, variants)
 }
 
 function state(value: unknown): ModelState {

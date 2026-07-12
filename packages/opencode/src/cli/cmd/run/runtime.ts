@@ -193,7 +193,8 @@ async function runInteractiveRuntime(input: RunRuntimeInput, deps: RunRuntimeDep
           variant: undefined,
         })
   const savedTask = resolveSavedVariant(ctx.model)
-  const [tuiConfig, session, savedVariant] = await Promise.all([tuiConfigTask, sessionTask, savedTask])
+  const effortTask = ctx.sdk.config.get().then((c) => c.data?.effort_level).catch(() => undefined)
+  const [tuiConfig, session, savedVariant, effortLevel] = await Promise.all([tuiConfigTask, sessionTask, savedTask, effortTask])
   const state: RuntimeState = {
     shown: !session.first,
     aborting: false,
@@ -201,7 +202,7 @@ async function runInteractiveRuntime(input: RunRuntimeInput, deps: RunRuntimeDep
     providers: [],
     variants: [],
     limits: {},
-    activeVariant: resolveVariant(ctx.variant, session.variant, savedVariant, []),
+    activeVariant: resolveVariant(ctx.variant, session.variant, savedVariant, [], effortLevel),
     sessionID: ctx.sessionID,
     history: [...session.history],
     localRows: [],
@@ -295,7 +296,7 @@ async function runInteractiveRuntime(input: RunRuntimeInput, deps: RunRuntimeDep
           return
         }
 
-        state.activeVariant = resolveVariant(ctx.variant, undefined, saved, state.variants)
+        state.activeVariant = resolveVariant(ctx.variant, undefined, saved, state.variants, effortLevel)
       })
       state.switching = switching
       await switching
@@ -432,7 +433,7 @@ async function runInteractiveRuntime(input: RunRuntimeInput, deps: RunRuntimeDep
     state.variants = variantsFor(state.providers, state.model)
     state.limits = info.limits
 
-    const next = resolveVariant(ctx.variant, session.variant, savedVariant, state.variants)
+    const next = resolveVariant(ctx.variant, session.variant, savedVariant, state.variants, effortLevel)
     if (next !== state.activeVariant) {
       state.activeVariant = next
     }

@@ -2313,6 +2313,125 @@ noLLMServer.instance(
   },
 )
 
+noLLMServer.instance(
+  "effort_level applies when no other variant is set",
+  () =>
+    Effect.gen(function* () {
+      const prompt = yield* SessionPrompt.Service
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({})
+
+      const result = yield* prompt.prompt({
+        sessionID: session.id,
+        agent: "build",
+        model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") },
+        noReply: true,
+        parts: [{ type: "text", text: "hello" }],
+      })
+      if (result.info.role !== "user") throw new Error("expected user message")
+      expect(result.info.model.variant).toBe("high")
+    }),
+  {
+    config: {
+      ...cfg,
+      effort_level: "high",
+      provider: {
+        ...cfg.provider,
+        test: {
+          ...cfg.provider.test,
+          models: {
+            "test-model": {
+              ...cfg.provider.test.models["test-model"],
+              variants: { high: {}, xhigh: {} },
+            },
+          },
+        },
+      },
+    },
+  },
+)
+
+noLLMServer.instance(
+  "effort_level is skipped when the model does not offer that variant",
+  () =>
+    Effect.gen(function* () {
+      const prompt = yield* SessionPrompt.Service
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({})
+
+      const result = yield* prompt.prompt({
+        sessionID: session.id,
+        agent: "build",
+        model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") },
+        noReply: true,
+        parts: [{ type: "text", text: "hello" }],
+      })
+      if (result.info.role !== "user") throw new Error("expected user message")
+      expect(result.info.model.variant).toBeUndefined()
+    }),
+  {
+    config: {
+      ...cfg,
+      effort_level: "max",
+      provider: {
+        ...cfg.provider,
+        test: {
+          ...cfg.provider.test,
+          models: {
+            "test-model": {
+              ...cfg.provider.test.models["test-model"],
+              variants: { high: {}, xhigh: {} },
+            },
+          },
+        },
+      },
+    },
+  },
+)
+
+noLLMServer.instance(
+  "effort_level does not override a more specific agent variant",
+  () =>
+    Effect.gen(function* () {
+      const prompt = yield* SessionPrompt.Service
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({})
+
+      const result = yield* prompt.prompt({
+        sessionID: session.id,
+        agent: "build",
+        noReply: true,
+        parts: [{ type: "text", text: "hello" }],
+      })
+      if (result.info.role !== "user") throw new Error("expected user message")
+      expect(result.info.model.variant).toBe("xhigh")
+    }),
+  {
+    config: {
+      ...cfg,
+      effort_level: "high",
+      provider: {
+        ...cfg.provider,
+        test: {
+          ...cfg.provider.test,
+          models: {
+            "test-model": {
+              ...cfg.provider.test.models["test-model"],
+              variants: { high: {}, xhigh: {} },
+            },
+          },
+        },
+      },
+      agent: {
+        build: {
+          model: "test/test-model",
+          variant: "xhigh",
+        },
+      },
+    },
+  },
+)
+
 // Agent / command resolution errors
 
 noLLMServer.instance(

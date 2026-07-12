@@ -645,13 +645,17 @@ const layer = Layer.effect(
 
       const model = input.model ?? ag.model ?? (yield* currentModel(input.sessionID))
       const same = ag.model && model.providerID === ag.model.providerID && model.modelID === ag.model.modelID
+      const cfg = yield* config.get()
+      const needGlobal = !input.variant && !!cfg.effort_level
       const full =
-        !input.variant && ag.variant && same
+        !input.variant && ((ag.variant && same) || needGlobal)
           ? yield* provider
               .getModel(model.providerID, model.modelID)
               .pipe(Effect.catchIf(Provider.ModelNotFoundError.isInstance, () => Effect.succeed(undefined)))
           : undefined
-      const variant = input.variant ?? (ag.variant && full?.variants?.[ag.variant] ? ag.variant : undefined)
+      const agentVariant = ag.variant && same && full?.variants?.[ag.variant] ? ag.variant : undefined
+      const globalVariant = cfg.effort_level && full?.variants?.[cfg.effort_level] ? cfg.effort_level : undefined
+      const variant = input.variant ?? agentVariant ?? globalVariant
 
       const info: SessionV1.User = {
         id: input.messageID ?? MessageID.ascending(),
