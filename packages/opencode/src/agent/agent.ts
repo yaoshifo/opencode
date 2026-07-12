@@ -164,6 +164,7 @@ const layer = Layer.effect(
                 plan_exit: "ask",
                 task: {
                   general: "deny",
+                  render: "deny",
                 },
                 external_directory: {
                   [path.join(Global.Path.data, "plans", "*")]: "allow",
